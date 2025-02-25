@@ -12,13 +12,14 @@ import yaml
 config_path = os.path.join(os.path.dirname(__file__), 'config.yml')
 if os.path.exists(config_path):
     with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)     
+        config = yaml.safe_load(f)
+
         if 'auth_token' in config:
             AUTH_KEY = config['auth_token']
             print('auth_token loaded from config file')
         else:
             quit('No auth_token found in config file')
-
+            
         if 'upload_url' in config:
             UPLOAD_URL = config['upload_url']
             print('upload_url loaded from config file')
@@ -53,6 +54,7 @@ class ScreenshotWidget(QWidget):
 
         if rect.isNull() or rect.width() < 32 or rect.height() < 32:
             self.close()
+            QApplication.instance().quit() # how tf did i forget this
             return
         self.hide()
 
