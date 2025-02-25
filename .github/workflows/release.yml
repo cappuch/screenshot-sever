@@ -24,26 +24,24 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.24'
+        go-version: '1.21'
 
     - name: Build
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
       run: |
-        mkdir -p "dist/file-server-${{ matrix.goos }}-${{ matrix.goarch }}"
         output_name=file-server
         if [ "$GOOS" = "windows" ]; then
           output_name+='.exe'
         fi
-        CGO_ENABLED=0 go build -v -o "dist/file-server-${{ matrix.goos }}-${{ matrix.goarch }}/$output_name"
+        go build -v -o "dist/file-server-${{ matrix.goos }}-${{ matrix.goarch }}/$output_name"
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: file-server-${{ matrix.goos }}-${{ matrix.goarch }}
         path: dist/file-server-${{ matrix.goos }}-${{ matrix.goarch }}/*
-        if-no-files-found: error
 
   release:
     needs: build
