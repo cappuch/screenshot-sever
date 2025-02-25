@@ -36,33 +36,43 @@ class ScreenshotWidget(QWidget):
         self.setGeometry(geo)
         
         self.origin = QPoint()
+        self.current_pos = QPoint()
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
         self.show()
 
     def mousePressEvent(self, event):
-        self.origin = event.pos()
-        self.rubberBand.setGeometry(QRect(self.origin, QSize()))
+        global_pos = self.mapToGlobal(event.pos())
+        self.origin = global_pos
+        self.current_pos = global_pos
+        local_pos = event.pos()
+        self.rubberBand.setGeometry(QRect(local_pos, QSize()))
         self.rubberBand.show()
 
     def mouseMoveEvent(self, event):
-        rect = QRect(self.origin, event.pos()).normalized()
+        self.current_pos = self.mapToGlobal(event.pos())
+        rect = QRect(self.mapFromGlobal(self.origin), event.pos()).normalized()
         self.rubberBand.setGeometry(rect)
 
     def mouseReleaseEvent(self, event):
         self.rubberBand.hide()
-        rect = self.rubberBand.geometry()
+        self.current_pos = self.mapToGlobal(event.pos())
 
-        if rect.isNull() or rect.width() < 32 or rect.height() < 32:
+        x1, x2 = sorted([self.origin.x(), self.current_pos.x()])
+        y1, y2 = sorted([self.origin.y(), self.current_pos.y()])
+        width = x2 - x1
+        height = y2 - y1
+
+        if width < 32 or height < 32:
             self.close()
-            QApplication.instance().quit() # how tf did i forget this
+            QApplication.instance().quit()
             return
         self.hide()
 
-        QApplication.processEvents() # hide the window real quick
+        QApplication.processEvents()
 
         time.sleep(0.2)
         with mss.mss() as sct:
-            monitor = {'top': rect.y(), 'left': rect.x(), 'width': rect.width(), 'height': rect.height()}
+            monitor = {'top': y1, 'left': x1, 'width': width, 'height': height}
             sct_img = sct.grab(monitor)
             temp_path = os.path.join(os.path.dirname(__file__), 'screenshot.png')
             mss.tools.to_png(sct_img.rgb, sct_img.size, output=temp_path)
